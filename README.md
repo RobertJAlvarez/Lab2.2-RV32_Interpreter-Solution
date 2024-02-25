@@ -1,1 +1,1 @@
-# Lab2.2-RV32_Interpreter-Solution
+# Lab2.2-RV32_Interpreter
