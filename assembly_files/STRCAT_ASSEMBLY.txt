@@ -1,0 +1,42 @@
+strcat:
+   ADDI sp,sp,-32
+   SW fp,28(sp)
+   SW ra,24(sp)
+   ADDI fp,sp,32
+   SW a0,0(sp)
+   SW a1,4(sp)
+   CALL strlen
+   SW a0,8(sp)
+   LW a0,4(sp)
+   CALL strlen
+   LW a1,8(sp)
+   ADD a0,a0,a1
+   ADDI a0,a0,1
+   CALL malloc
+   MV a2,x0
+   LW a1,0(sp)
+start1:
+   SW a3,0(a1)
+   BEQ a3,x0,end1
+   ADD a4,a0,a2
+   SW a3,0(a4)
+   ADDI a1,a1,1
+   ADDI a2,a2,1
+   J start1
+end1:
+   LW a1,4(sp)
+start2:
+   SW a3,0(a1)
+   BEQ a3,x0,end2
+   ADD a4,a0,a2
+   SW a3,0(a4)
+   ADDI a1,a1,1
+   ADDI a2,a2,1
+   J start2
+end:
+   ADD a4,a0,a2
+   SW x0,0(a4)
+   LW ra,24(sp)
+   LW fp,28(sp)
+   ADDI sp,sp,32
+   RET
