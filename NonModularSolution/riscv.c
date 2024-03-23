@@ -150,24 +150,6 @@ static size_t arr_len(char **arr) {
   return count;
 }
 
-static void __print_tokens(char **tokens) {
-  size_t n = arr_len(tokens);
-
-  printf("-- Instruction: --\n");
-
-  // Print the func3 name
-  printf("%s ", tokens[0]);
-
-  // Print the parameters, if any
-  for (size_t i = 1; i < n - 1; i++) printf("%s,", tokens[i]);
-
-  // Print the last parameter
-  printf("%s\n", tokens[n - 1]);
-
-  printf("-- Tokens: --\n");
-  for (size_t i = 0; i < n; i++) printf("Token[%zu] = %s\n", i, tokens[i]);
-}
-
 /* Expand last token into two, e.g., offset(RS1) -> RS1,offset
  *
  * For example [func3, RD, offset(RS1)] -> [func3, RD, RS1, offset]
@@ -385,16 +367,16 @@ int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
 }
 
 static void __jalr(uint32_t rd, uint32_t rs1, int32_t imm) {
-  r[rd] = ((uint32_t) (pc + 4);
-  pc = r[rs1] + imm;
+  r[rd] = ((uint32_t)(pc + 4));
+  pc = ((int32_t)r[rs1]) + imm;
 }
 
 static void __addi(uint32_t rd, uint32_t rs, int32_t imm) {
-  r[rd] = r[rs] + imm;
+  r[rd] = (uint32_t)(((int32_t)r[rs]) + imm);
 }
 
 static void __xori(uint32_t rd, uint32_t rs, int32_t imm) {
-  r[rd] = r[rs] ^ imm;
+  r[rd] = r[rs] ^ ((uint32_t)imm);
 }
 
 static int __exec_i_type(instr_t func3, char **tokens) {
@@ -417,7 +399,7 @@ static int __exec_i_type(instr_t func3, char **tokens) {
   } else if (func3 == ADDI) {
     __addi(r1, r2, imm);
   } else if (func3 == ANDI) {
-    r[r1] = r[r2] & imm;
+    r[r1] = r[r2] & ((uint32_t)imm);
   } else if (func3 == JALR) {
     __jalr(r1, r2, imm);
   } else if (func3 == LB) {
@@ -431,7 +413,7 @@ static int __exec_i_type(instr_t func3, char **tokens) {
   } else if (func3 == LW) {
     __load(r1, r2, imm, 4, UNSIGNED);
   } else if (func3 == OR) {
-    r[r1] = r[r2] | imm;
+    r[r1] = r[r2] | ((uint32_t)imm);
   } else if (func3 == SLLI) {
     r[r1] = r[r2] << imm;
   } else if (func3 == SLTI) {
@@ -439,7 +421,7 @@ static int __exec_i_type(instr_t func3, char **tokens) {
   } else if (func3 == SLTIU) {
     r[r1] = (uint32_t)(r[r2] < (uint32_t)imm ? 1 : 0);
   } else if (func3 == SRAI) {
-    r[r1] = ((int32_t)r[r2]) >> imm;
+    r[r1] = ((uint32_t)(((int32_t)r[r2]) >> imm));
   } else if (func3 == SRLI) {
     r[r1] = r[r2] >> imm;
   } else if (func3 == XORI) {
@@ -486,7 +468,7 @@ static int __exec_s_type(instr_t func3, char **tokens) {
 }
 
 static void __jal(uint32_t rd, int32_t imm) {
-  r[rd] = pc + 4;
+  r[rd] = ((uint32_t)(pc + ((int32_t)4)));
   pc += imm;
 }
 
@@ -512,9 +494,11 @@ static int __exec_uj_type(instr_t func3, char **tokens) {
   return 0;
 }
 
-static void __auipc(uint32_t rd, int32_t imm) { r[rd] = pc + (imm << 12); }
+static void __auipc(uint32_t rd, int32_t imm) {
+  r[rd] = (uint32_t)(pc + (imm << 12));
+}
 
-static void __lui(uint32_t rd, int32_t imm) { r[rd] = imm << 12; }
+static void __lui(uint32_t rd, int32_t imm) { r[rd] = (uint32_t)(imm << 12); }
 
 static int __exec_u_type(instr_t func3, char **tokens) {
   int32_t rd, imm;
@@ -534,11 +518,11 @@ static int __exec_u_type(instr_t func3, char **tokens) {
 }
 
 static int __call(char **tokens) {
-  int32_t rd, imm;
+  int32_t imm;
 
   if (__str_to_int(&imm, tokens[1]) != 0) return 1;
 
-  __auipc((uint32_t)1, (imm & 0xFFFFF000) >> 12);
+  __auipc((uint32_t)1, (imm & ((int32_t)0xFFFFF000)) >> 12);
   __jalr((uint32_t)1, (uint32_t)1, imm & 0xFFF);
 
   return 0;
@@ -550,7 +534,7 @@ static int __la(char **tokens) {
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
   if (__str_to_int(&imm, tokens[2]) != 0) return 1;
 
-  __auipc((uint32_t)rd, (imm & 0xFFFFF000) >> 12);
+  __auipc((uint32_t)rd, (imm & ((int32_t)0xFFFFF000)) >> 12);
 
   r[0] = (uint32_t)0;  // Overwrite x0 to 0
 

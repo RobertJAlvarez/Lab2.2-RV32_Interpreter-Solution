@@ -167,7 +167,6 @@ int process_file(const char *file) {
   }
 
   // Write a line at the end of file that overwrite PC to -1
-  n_lines++;
   n_chars = fprintf(write_f, "J -%zu", 1 + n_lines * 4);
   fprintf(write_f, "%*s\n", (int)(LINE_SIZE - (size_t)n_chars), "");
 
