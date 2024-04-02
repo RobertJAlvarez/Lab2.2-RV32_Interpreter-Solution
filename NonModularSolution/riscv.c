@@ -203,7 +203,7 @@ static void *__order_mem_instr(instr_t func3, char **tokens) {
   // If it is a load instr we already have the token in the wanted order.
   // If it is a save instr, go from [func3, RS2, RS1, offset] to [func3, RS1,
   // RS2, offset] Meaning: from SW RS2,offset(RS1) to SW RS1,RS2,offset
-  if ((func3 == SB) || (func3 == SW)) {
+  if ((func3 == SB) || (func3 == SH) || (func3 == SW)) {
     t = (void *)tokens[1];
     tokens[1] = tokens[2];
     tokens[2] = (char *)t;
