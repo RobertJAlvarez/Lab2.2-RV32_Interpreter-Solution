@@ -16,7 +16,7 @@ riscv: $(OBJS) riscv.o
 	$(CC) -o $@ $^
 
 $(INSTRUCTIONS):
-	cp assembly_files/$@$(A_SUF) .
+	cp ../assembly_files/$@$(A_SUF) .
 	touch $@$(B_SUF)  # Create buffer file
 	# Interpret $@$(A_SUF) using ./riscv and populate $@$(B_SUF) with final registers status
 	./riscv $@$(A_SUF) $@$(B_SUF)
