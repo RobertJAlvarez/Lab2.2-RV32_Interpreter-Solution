@@ -20,8 +20,7 @@ static int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
     case 1:
       switch (sign) {
         case SIGNED:
-          r[rd] =
-              (uint32_t)(/*sign extend*/ (int32_t)(/*truncate*/ (uint8_t)num));
+          r[rd] = (uint32_t)(/*truncate*/ (int8_t)num);
           break;
         case UNSIGNED:
           r[rd] = (uint32_t)(/*truncate*/ (uint8_t)num);
@@ -33,8 +32,7 @@ static int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
     case 2:
       switch (sign) {
         case SIGNED:
-          r[rd] =
-              (uint32_t)(/*sign extend*/ (int32_t)(/*truncate*/ (uint16_t)num));
+          r[rd] = (uint32_t)(/*sign extend*/ (int16_t)num);
           break;
         case UNSIGNED:
           r[rd] = (uint32_t)(/*truncate*/ (uint16_t)num);
@@ -56,6 +54,7 @@ static int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
 
 void __jalr(uint32_t rd, uint32_t rs1, int32_t imm) {
   r[rd] = ((uint32_t)(pc + 4));
+  r[0] = ((uint32_t)0);  // Enforce X0 = 0
   pc = ((int32_t)r[rs1]) + imm;
 }
 

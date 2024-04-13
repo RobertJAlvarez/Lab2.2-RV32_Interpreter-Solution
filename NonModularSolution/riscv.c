@@ -335,8 +335,7 @@ int __load(const uint32_t rd, const uint32_t rs1, const int32_t imm,
     case 1:
       switch (sign) {
         case SIGNED:
-          r[rd] =
-              (uint32_t)(/*sign extend*/ (int32_t)(/*truncate*/ (uint8_t)num));
+          r[rd] = (uint32_t)(/*truncate*/ (int8_t)num);
           break;
         case UNSIGNED:
           r[rd] = (uint32_t)(/*truncate*/ (uint8_t)num);
@@ -348,8 +347,7 @@ int __load(const uint32_t rd, const uint32_t rs1, const int32_t imm,
     case 2:
       switch (sign) {
         case SIGNED:
-          r[rd] =
-              (uint32_t)(/*sign extend*/ (int32_t)(/*truncate*/ (uint16_t)num));
+          r[rd] = (uint32_t)(/*sign extend*/ (int16_t)num);
           break;
         case UNSIGNED:
           r[rd] = (uint32_t)(/*truncate*/ (uint16_t)num);
@@ -371,6 +369,7 @@ int __load(const uint32_t rd, const uint32_t rs1, const int32_t imm,
 
 static void __jalr(const uint32_t rd, const uint32_t rs1, const int32_t imm) {
   r[rd] = ((uint32_t)(pc + 4));
+  r[0] = ((uint32_t)0);  // Enforce X0 = 0
   pc = ((int32_t)r[rs1]) + imm;
 }
 
@@ -472,6 +471,7 @@ static int __exec_s_type(const instr_t func3, const char **tokens) {
 
 static void __jal(const uint32_t rd, const int32_t imm) {
   r[rd] = ((uint32_t)(pc + ((int32_t)4)));
+  r[0] = ((uint32_t)0);  // Enforce X0 = 0
   pc += imm;
 }
 

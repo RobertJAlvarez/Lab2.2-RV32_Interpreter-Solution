@@ -6,6 +6,7 @@
 
 void __jal(uint32_t rd, int32_t imm) {
   r[rd] = ((uint32_t)pc) + 4;
+  r[0] = ((uint32_t)0);  // Enforce X0 = 0
   pc += imm;
 }
 
