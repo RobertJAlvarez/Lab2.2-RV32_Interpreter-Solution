@@ -6,7 +6,8 @@ CFLAGS = -O3 -g3 -Wall -Wextra -Werror=format-security -Werror=implicit-function
           -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wwrite-strings -Wconversion
 
 # This files are dummy files to test the basics of the interpreter
-INSTRUCTIONS := LI_SP_ADD MV_X0 NEG_NOT J_JR
+SIMPLE_INSTRUCTIONS := J_JR LI_SP_ADD MV_X0 NEG_NOT
+INSTRUCTIONS := Arith Bitwise Load Store Pseudo Jump
 
 B_SUF = _BUFFER.txt
 A_SUF = _ASSEMBLY.txt

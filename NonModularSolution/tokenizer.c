@@ -18,16 +18,18 @@ static size_t __n_tokens(const char *str, const char *delims) {
 
 char **tokenize(char *str, const char *delims) {
   char **tokens;
-  char *token;
   char **p;
 
-  tokens = (char **)malloc((__n_tokens(str, delims) + 1) * sizeof(char *));
+  size_t n_tokens;
+
+  n_tokens = __n_tokens(str, delims);
+  tokens = (char **)malloc((n_tokens + 1) * sizeof(char *));
   if (tokens == NULL) return NULL;
 
-  p = tokens;
-  while ((token = str_sep(&str, delims)) != NULL) *p++ = token;
+  for (p = tokens; n_tokens != 0; n_tokens--) {
+    *p++ = str_sep(&str, delims);
+  }
 
-  *p++ = str;
   *p = NULL;
 
   return tokens;

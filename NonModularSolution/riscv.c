@@ -93,7 +93,7 @@ static void init_memory_elements(void) {
   r[2] = MEM_SIZE;
 }
 
-static int print_registers(char *fd_name) {
+static int print_registers(const char *fd_name) {
   FILE *fptr;
 
   if ((fptr = fopen(fd_name, "w")) == NULL) return 1;
@@ -112,7 +112,7 @@ static int print_registers(char *fd_name) {
  * For example: Base on instr_t implementation if "LW"
  * is given then LW = 2 is returned.
  */
-static instr_t __str_to_enum(char *func3) {
+static instr_t __str_to_enum(const char *func3) {
   const static struct {
     instr_t instr;
     const char *str;
@@ -139,14 +139,14 @@ static instr_t __str_to_enum(char *func3) {
 }
 
 /* Return if the func3, i.e., LW, SB, MV, J, is a memory instruction. */
-static int __is_mem_instr(instr_t func3) {
+static inline int __is_mem_instr(const instr_t func3) {
   return ((func3 == LB) || (func3 == LBU) || (func3 == LH) || (func3 == LHU) ||
           (func3 == LW) || (func3 == SB) || (func3 == SH) || (func3 == SW));
 }
 
-static size_t arr_len(char **arr) {
+static size_t arr_len(const char **arr) {
   size_t count = 0;
-  for (char **p = arr; *p != NULL; p++) count++;
+  for (const char **p = arr; *p != NULL; p++) count++;
   return count;
 }
 
@@ -159,7 +159,8 @@ static void *__expand_last(char **tokens) {
   void *t2;
 
   // Split the last token into 2
-  if ((t1 = tokenize(tokens[2], "(")) == NULL) return NULL;
+  if ((t2 = tokenize(tokens[2], "(")) == NULL) return NULL;
+  t1 = (char **)t2;
 
   // Expand tokens from 3 to 4 to store the tokens
   if ((t2 = realloc(tokens, 5 * sizeof(char *))) == NULL) {
@@ -176,9 +177,10 @@ static void *__expand_last(char **tokens) {
   free(t1);
 
   // Overwrite ')' with '\0'
-  *str_chr(tokens[2], (int)')') = '\0';
-  // Failure from str_chr is not a possible case because we are guarantee a
-  // correct format
+  if ((t2 = str_chr(tokens[2], (int)')')) == NULL) {
+    return NULL;
+  }
+  *((char *)t2) = '\0';
 
   return tokens;
 }
@@ -190,11 +192,11 @@ static void *__expand_last(char **tokens) {
  *  1) SW RS2,offset(RS1) -> SW RS1,RS2,offset
  *  2) LB RD,offset(RS1) -> LB RD,RS1,offset
  */
-static void *__order_mem_instr(instr_t func3, char **tokens) {
+static void *__order_mem_instr(const instr_t func3, char **tokens) {
   void *t;
 
   // If there are 4 tokens then we have the expanded format
-  if (arr_len(tokens) == 4) return tokens;
+  if (arr_len((const char **)tokens) == 4) return tokens;
 
   if ((t = __expand_last(tokens)) == NULL) return NULL;
 
@@ -235,7 +237,7 @@ int __str_to_int(int32_t *res, const char *str) {
  *
  * For example, "ra" -> X2.
  */
-static int __get_reg_number(int32_t *res, char *reg) {
+static int __get_reg_number(int32_t *res, const char *reg) {
   // Mapping between ABI_name and register number in X# format
   const static struct {
     int32_t num;
@@ -267,11 +269,11 @@ static int __get_reg_number(int32_t *res, char *reg) {
   return 1;
 }
 
-static void __sub(uint32_t rd, uint32_t rs1, uint32_t rs2) {
+static void __sub(const uint32_t rd, const uint32_t rs1, const uint32_t rs2) {
   r[rd] = r[rs1] - r[rs2];
 }
 
-static int __exec_r_type(instr_t func3, char **tokens) {
+static int __exec_r_type(const instr_t func3, const char **tokens) {
   int32_t s_r1, s_r2, s_r3;
   uint32_t r1, r2, r3;
 
@@ -308,7 +310,8 @@ static int __exec_r_type(instr_t func3, char **tokens) {
   return 0;
 }
 
-static int __save(uint32_t rs1, uint32_t rs2, int32_t imm, int32_t n_bytes) {
+static int __save(const uint32_t rs1, const uint32_t rs2, const int32_t imm,
+                  const int32_t n_bytes) {
   // Save n_bytes from rs2 into mem using little endian
   for (int32_t i = 0; i < n_bytes; i++) {
     // Extract the i group of 8 bits from rs2 and place it in mem
@@ -318,8 +321,8 @@ static int __save(uint32_t rs1, uint32_t rs2, int32_t imm, int32_t n_bytes) {
   return 0;
 }
 
-int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
-           sign_t sign) {
+int __load(const uint32_t rd, const uint32_t rs1, const int32_t imm,
+           const int32_t n_bytes, const sign_t sign) {
   uint32_t num = 0;
 
   // Get one byte of memory at a time and place it in num
@@ -366,20 +369,20 @@ int __load(uint32_t rd, uint32_t rs1, int32_t imm, int32_t n_bytes,
   return 0;
 }
 
-static void __jalr(uint32_t rd, uint32_t rs1, int32_t imm) {
+static void __jalr(const uint32_t rd, const uint32_t rs1, const int32_t imm) {
   r[rd] = ((uint32_t)(pc + 4));
   pc = ((int32_t)r[rs1]) + imm;
 }
 
-static void __addi(uint32_t rd, uint32_t rs, int32_t imm) {
+static void __addi(const uint32_t rd, const uint32_t rs, const int32_t imm) {
   r[rd] = (uint32_t)(((int32_t)r[rs]) + imm);
 }
 
-static void __xori(uint32_t rd, uint32_t rs, int32_t imm) {
+static void __xori(const uint32_t rd, const uint32_t rs, const int32_t imm) {
   r[rd] = r[rs] ^ ((uint32_t)imm);
 }
 
-static int __exec_i_type(instr_t func3, char **tokens) {
+static int __exec_i_type(const instr_t func3, const char **tokens) {
   int32_t s_r1, s_r2, imm;
   uint32_t r1, r2;
 
@@ -463,20 +466,20 @@ static int __exec_i_type(instr_t func3, char **tokens) {
   return 0;
 }
 
-static int __exec_s_type(instr_t func3, char **tokens) {
+static int __exec_s_type(const instr_t func3, const char **tokens) {
   return __exec_i_type(func3, tokens);
 }
 
-static void __jal(uint32_t rd, int32_t imm) {
+static void __jal(const uint32_t rd, const int32_t imm) {
   r[rd] = ((uint32_t)(pc + ((int32_t)4)));
   pc += imm;
 }
 
-static int __exec_sb_type(instr_t func3, char **tokens) {
+static int __exec_sb_type(const instr_t func3, const char **tokens) {
   return __exec_i_type(func3, tokens);
 }
 
-static int __exec_uj_type(instr_t func3, char **tokens) {
+static int __exec_uj_type(const instr_t func3, const char **tokens) {
   int32_t s_r1, imm;
   uint32_t r1;
 
@@ -494,13 +497,15 @@ static int __exec_uj_type(instr_t func3, char **tokens) {
   return 0;
 }
 
-static void __auipc(uint32_t rd, int32_t imm) {
+static void __auipc(const uint32_t rd, const int32_t imm) {
   r[rd] = (uint32_t)(pc + (imm << 12));
 }
 
-static void __lui(uint32_t rd, int32_t imm) { r[rd] = (uint32_t)(imm << 12); }
+static void __lui(const uint32_t rd, const int32_t imm) {
+  r[rd] = (uint32_t)(imm << 12);
+}
 
-static int __exec_u_type(instr_t func3, char **tokens) {
+static int __exec_u_type(const instr_t func3, const char **tokens) {
   int32_t rd, imm;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -517,7 +522,7 @@ static int __exec_u_type(instr_t func3, char **tokens) {
   return 0;
 }
 
-static int __call(char **tokens) {
+static int __call(const char **tokens) {
   int32_t imm;
 
   if (__str_to_int(&imm, tokens[1]) != 0) return 1;
@@ -528,7 +533,7 @@ static int __call(char **tokens) {
   return 0;
 }
 
-static int __la(char **tokens) {
+static int __la(const char **tokens) {
   int32_t rd, imm;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -543,7 +548,7 @@ static int __la(char **tokens) {
   return 0;
 }
 
-static int __li(char **tokens) {
+static int __li(const char **tokens) {
   int32_t rd, imm;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -554,7 +559,7 @@ static int __li(char **tokens) {
   return 0;
 }
 
-static int __mv(char **tokens) {
+static int __mv(const char **tokens) {
   int32_t rd, rs;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -565,7 +570,7 @@ static int __mv(char **tokens) {
   return 0;
 }
 
-static int __neg(char **tokens) {
+static int __neg(const char **tokens) {
   int32_t rd, rs;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -576,7 +581,7 @@ static int __neg(char **tokens) {
   return 0;
 }
 
-static int __not(char **tokens) {
+static int __not(const char **tokens) {
   int32_t rd, rs;
 
   if (__get_reg_number(&rd, tokens[1]) != 0) return 1;
@@ -593,7 +598,7 @@ static int __ret(void) {
   return 0;
 }
 
-static int __j(char **tokens) {
+static int __j(const char **tokens) {
   int32_t imm;
 
   if (__str_to_int(&imm, tokens[1]) != 0) return 1;
@@ -603,7 +608,7 @@ static int __j(char **tokens) {
   return 0;
 }
 
-static int __jr(char **tokens) {
+static int __jr(const char **tokens) {
   int32_t rs;
 
   if (__get_reg_number(&rs, tokens[1]) != 0) return 1;
@@ -613,7 +618,7 @@ static int __jr(char **tokens) {
   return 0;
 }
 
-static int __is_jump_instr(instr_t func3) {
+static int __is_jump_instr(const instr_t func3) {
   return ((func3 == JALR) || (func3 == BEQ) || (func3 == BGE) ||
           (func3 == BGEU) || (func3 == BLT) || (func3 == BLTU) ||
           (func3 == BNE) || (func3 == JAL) || (func3 == CALL) || (func3 == J) ||
@@ -664,12 +669,12 @@ int interpret(char *instr) {
     case SRAI:
     case SRLI:
     case XORI:
-      status = __exec_i_type(func3, tokens);
+      status = __exec_i_type(func3, (const char **)tokens);
       break;
     case SB:
     case SH:
     case SW:
-      status = __exec_s_type(func3, tokens);
+      status = __exec_s_type(func3, (const char **)tokens);
       break;
     case ADD:
     case AND:
@@ -681,7 +686,7 @@ int interpret(char *instr) {
     case SRL:
     case SUB:
     case XOR:
-      status = __exec_r_type(func3, tokens);
+      status = __exec_r_type(func3, (const char **)tokens);
       break;
     case BEQ:
     case BGE:
@@ -689,41 +694,41 @@ int interpret(char *instr) {
     case BLT:
     case BLTU:
     case BNE:
-      status = __exec_sb_type(func3, tokens);
+      status = __exec_sb_type(func3, (const char **)tokens);
       break;
     case JAL:
-      status = __exec_uj_type(func3, tokens);
+      status = __exec_uj_type(func3, (const char **)tokens);
       break;
     case AUIPC:
     case LUI:
-      status = __exec_u_type(func3, tokens);
+      status = __exec_u_type(func3, (const char **)tokens);
       break;
     case CALL:
-      status = __call(tokens);
+      status = __call((const char **)tokens);
       break;
     case LA:
-      status = __la(tokens);
+      status = __la((const char **)tokens);
       break;
     case LI:
-      status = __li(tokens);
+      status = __li((const char **)tokens);
       break;
     case MV:
-      status = __mv(tokens);
+      status = __mv((const char **)tokens);
       break;
     case NEG:
-      status = __neg(tokens);
+      status = __neg((const char **)tokens);
       break;
     case NOP:
       status = 0;
       break;
     case NOT:
-      status = __not(tokens);
+      status = __not((const char **)tokens);
       break;
     case J:
-      status = __j(tokens);
+      status = __j((const char **)tokens);
       break;
     case JR:
-      status = __jr(tokens);
+      status = __jr((const char **)tokens);
       break;
     case RET:
       status = __ret();

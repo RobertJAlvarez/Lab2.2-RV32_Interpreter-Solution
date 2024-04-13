@@ -19,7 +19,7 @@ size_t n_lines;
 entry_t *file_lines;
 int fd;
 
-static void __close_file(int __fd) {
+static void __close_file(const int __fd) {
   if (close(__fd) < 0)
     fprintf(stderr, "Error closing file \"%s\": %s\n", SEEK_FILE_NAME,
             strerror(errno));
@@ -85,7 +85,7 @@ int close_file(void) {
   return 0;
 }
 
-void get_line(char *buffer, size_t k) {
+void get_line(char *buffer, const size_t k) {
   // Copy line from file into buffer
   memcpy(buffer, file_lines[k].line, LINE_SIZE);
 
